@@ -1,0 +1,351 @@
+/*  This file is part of Waisda 
+
+    Copyright (c) 2012 Netherlands Institute for Sound and Vision
+    https://github.com/beeldengeluid/waisda
+	
+    Waisda is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Waisda is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Waisda.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+package nl.waisda.domain;
+
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
+
+import nl.waisda.model.Util;
+
+import org.hibernate.annotations.Formula;
+import org.jasypt.util.password.StrongPasswordEncryptor;
+
+@Entity
+public class User implements Comparable<User> {
+
+	public static final int NAVATARS = 8;
+
+	public static final DateFormat DATE_FORMAT = new SimpleDateFormat(
+			"dd-MM-yyyy");
+
+	private static final DateFormat CREATIONDATE_FORMAT = 
+			new SimpleDateFormat("EEEE d MMMM yyyy", Util.DUTCH_LOCALE);
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private int id;
+
+	/**
+	 * No email address means a user is anonymous. Anonymous users cannot login
+	 * explicitly, but they can participate in games. When they later
+	 * authenticate themselves as an existing user, the anonymous tag entries
+	 * are merged into that user's profile.
+	 */
+	@Basic
+	@Column(unique = true)
+	private String email;
+
+	@Basic
+	@Column(name = "password")
+	private String saltedPassword;
+
+	@Basic
+	private String name;
+
+	@Basic(optional = false)
+	private Date creationDate;
+
+	// Decoratieve profielvelden
+
+	@Basic(optional = true)
+	private Date dateOfBirth;
+
+	@Enumerated(EnumType.STRING)
+	private Gender gender;
+
+	@Basic(optional = true)
+	private String usernameTwitter;
+
+	@Basic(optional = true)
+	private String usernameHyves;
+
+	@Basic(optional = true)
+	private String usernameFacebook;
+	
+    private Boolean isAdmin;
+	// Afgeleide data
+
+	@Formula("IFNULL((SELECT SUM(te.score) FROM TagEntry te WHERE te.owner_id = id), 0)")
+	private int totalScore;
+
+	@Formula("(SELECT COUNT(*) FROM TagEntry te WHERE te.owner_id = id)")
+	private int totalTags;
+
+
+	@Formula("(SELECT COUNT(*) FROM TagEntry te WHERE te.owner_id = id AND te.matchingTagEntry_id IS NOT NULL)")
+	private int totalMatches;
+
+	@Formula("(SELECT COUNT(*) FROM TagEntry te WHERE te.owner_id = id AND te.matchingTagEntry_id IS NOT NULL)")
+	private int totalDiveClicks;
+	// SELECT SUM(tag.game.video.duration) FROM TagEntry tag
+	
+	@Formula("IFNULL((SELECT SUM(video.duration) FROM Video video inner join Game game on video.id = game.video_id where game.id in " +
+			"	(SELECT te.game_id FROM TagEntry te inner join Game game1 on te.game_id = game1.id where te.owner_id = id)), 0)")
+	private int totalHours;
+
+	@Transient
+	private int countNewPioneerMatches;
+	
+	@ManyToOne
+	private Rank rank;
+	
+	@Basic
+	private String imageUrl;
+
+	/* Logic */
+
+	public boolean isAnonymous() {
+		return email == null;
+	}
+
+	public void setPlainTextPassword(String plainTextPassword) {
+		StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
+		setSaltedPassword(passwordEncryptor.encryptPassword(plainTextPassword));
+	}
+
+	public boolean isPlayerBarVisible() {
+		return !isAnonymous() || getTotalScore() > 0;
+	}
+	
+	public String getPrettyCreationDate() {
+		return CREATIONDATE_FORMAT.format(creationDate);
+	}
+
+	/* Getters and setters */
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name != null ? name : "Guest";
+	}
+
+	public void setName(String name) {
+		this.name = name != null ? name.trim() : null;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email.trim();
+	}
+
+	public String getSaltedPassword() {
+		return saltedPassword;
+	}
+
+	public void setSaltedPassword(String saltedPassword) {
+		this.saltedPassword = saltedPassword;
+	}
+
+	public Date getCreationDate() {
+		return creationDate;
+	}
+
+	public void setCreationDate(Date creationDate) {
+		this.creationDate = creationDate;
+	}
+
+	public void setCreationDate() {
+		setCreationDate(new Date());
+	}
+
+	public String getAvatarUrl() {
+		return getGravatarUrl(email, 150);
+	}
+
+	public String getSmallAvatarUrl() {
+		return getGravatarUrl(email, 30);
+	}
+
+	public String getGravatarUrl(String email, int size) {
+		return String.format(
+				"http://www.gravatar.com/avatar/%s?s=%d&d=identicon",
+				getGravatarHash(), size);
+	}
+
+	private String getGravatarHash() {
+		String input = email;
+		if (input != null) {
+			input = input.trim().toLowerCase();
+		}
+		if (input == null || input.isEmpty()) {
+			input = String.valueOf(id);
+		}
+		try {
+			final String charset = "UTF-8";
+			byte[] emailBytes = input.getBytes(charset);
+			byte[] digest = MessageDigest.getInstance("MD5").digest(emailBytes);
+			BigInteger bigInt = new BigInteger(1, digest);
+			return bigInt.toString(16);
+		} catch (UnsupportedEncodingException e) {
+			return "";
+		} catch (NoSuchAlgorithmException e) {
+			return "";
+		}
+	}
+
+	public Date getDateOfBirth() {
+		return dateOfBirth;
+	}
+
+	public void setDateOfBirth(Date dateOfBirth) {
+		this.dateOfBirth = dateOfBirth;
+	}
+
+	public int getAge() {
+		if (dateOfBirth == null) {
+			return 0;
+		} else {
+			Calendar now = Calendar.getInstance();
+			now.setTime(new Date());
+
+			Calendar dob = Calendar.getInstance();
+			dob.setTime(dateOfBirth);
+
+			int dy = now.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
+			dob.add(Calendar.YEAR, dy);
+			if (dob.compareTo(now) > 0) {
+				dy--;
+			}
+			return dy;
+		}
+	}
+
+	public Gender getGender() {
+		return gender;
+	}
+
+	public void setGender(Gender gender) {
+		this.gender = gender;
+	}
+
+	public String getUsernameTwitter() {
+		return usernameTwitter;
+	}
+
+	public void setUsernameTwitter(String usernameTwitter) {
+		this.usernameTwitter = usernameTwitter;
+	}
+
+	public String getUsernameHyves() {
+		return usernameHyves;
+	}
+
+	public void setUsernameHyves(String usernameHyves) {
+		this.usernameHyves = usernameHyves;
+	}
+
+	public String getUsernameFacebook() {
+		return usernameFacebook;
+	}
+
+	public void setUsernameFacebook(String usernameFacebook) {
+		this.usernameFacebook = usernameFacebook;
+	}
+
+    public Boolean getAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(Boolean admin) {
+        isAdmin = admin;
+    }
+
+    public int getTotalScore() {
+		return totalScore;
+	}
+
+	public int getTotalTags() {
+		return totalTags;
+	}
+
+	public int getTotalMatches() {
+		return totalMatches;
+	}
+	public int getTotalDiveClicks() {
+		return totalDiveClicks;
+	}
+	public int getTotalHours() {
+		return totalHours;
+	}
+
+	public int getCountNewPioneerMatches() {
+		return countNewPioneerMatches;
+	}
+
+	public void setCountNewPioneerMatches(int countNewPioneerMatches) {
+		this.countNewPioneerMatches = countNewPioneerMatches;
+	}
+
+	public Rank getRank() {
+		return rank;
+	}
+
+	public void setRank(Rank rank) {
+		this.rank = rank;
+	}
+	
+	public String getImageUrl() {
+		return imageUrl;
+	}
+
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
+	}
+
+	public String getShortDescription() {
+		if (isAnonymous()) {
+			return String.format("Anonymous user %d", getId());
+		} else {
+			return String.format("User %d (%s)", getId(), getName());
+		}
+	}
+
+	@Override
+	public int compareTo(User other) {
+		return this.id - other.id;
+	}
+
+}

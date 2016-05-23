@@ -1,0 +1,302 @@
+/*  This file is part of Waisda 
+    Copyright (c) 2012 Netherlands Institute for Sound and Vision
+    https://github.com/beeldengeluid/waisda
+	
+    Waisda is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    Waisda is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with Waisda.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+package nl.waisda.domain;
+
+import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.Normalizer;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.*;
+
+import nl.waisda.model.Util;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.hibernate.annotations.Index;
+
+@Entity
+public class TagEntry2 implements Serializable {
+
+	private static final long serialVersionUID = -3032438049433062208L;
+
+	public static final DateFormat DATE_FORMAT = new SimpleDateFormat(
+			"EEEE d MMMM yyyy", Util.DUTCH_LOCALE);
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private int id;
+
+	/*
+	 * Fields: input from User
+	 */
+
+	@Basic(optional = false)
+	private String tag;
+
+	@Basic(optional = false)
+	private String normalizedTag;
+
+	/** Time within game. */
+	@Basic(optional = false)
+	private int gameTime;
+
+	@Basic(optional = false)
+	private int typingDuration;
+
+	@ManyToOne(optional = false)
+	private Game game;
+
+	@ManyToOne(optional = false)
+	private User owner;
+
+	@Basic(optional = false)
+	@Index(name = "creationDate")
+	private Date creationDate = new Date();
+
+	/*
+	 * Fields: derived from score-engine
+	 */
+
+	@Basic(optional = true)
+	private String dictionary;
+
+	@ManyToOne(fetch = FetchType.EAGER)
+	private TagEntry2 matchingTagEntry;
+
+	@Column(nullable = false, columnDefinition = "BOOLEAN")
+	private boolean pioneer;
+
+	@Basic(optional = false)
+	private int score;
+
+    @Transient
+    private boolean isSpecialMatch; // transient for ORM
+
+	/*
+	 * Business logic
+	 */
+
+	public static List<String> mapTag(List<TagEntry2> entries) {
+		List<String> tags = new ArrayList<String>();
+		for (TagEntry2 entry : entries) {
+			tags.add(entry.getTag());
+		}
+		return tags;
+	}
+
+	public String getFriendlyTime() {
+		return getFriendlyTime(gameTime);
+	}
+
+	public static String getFriendlyTime(int time) {
+		int s = time / 1000;
+		int m = s / 60;
+		s %= 60;
+		return String.format("%d:%02d", m, s);
+	}
+
+	/** Recomputes the score from the current match and bonus fields. */
+	public int recomputeScore2() {
+		if (tag.length() < 2) {
+			return 0;
+		}
+
+		if (matchingTagEntry != null
+				&& matchingTagEntry.getOwner().getId() == getOwner().getId()) {
+			// Literal matches with owner's own tags award no points. Return immediately.
+			return 0;
+		}
+
+		int score = 0;
+
+		if (dictionary != null) {
+			// Matches with a dictionary award 25 points. If you'd like the
+			// score to depend on the specific dictionary, you can do that here.
+			score += 2500;
+		}
+
+		if (matchingTagEntry != null) {
+			score += 5000;
+
+			if (pioneer) {
+				// Pioneer only matters if a matching tag entry was found.
+				score += 10000;
+			}
+		}
+
+		if (score == 0) {
+			// Players get 5 points for the effort, even if their entry didn't match.
+			score = 500;
+		}
+
+		return score;
+	}
+
+	/** Updates this entry's score field using recomputeScore. */
+	public void updateScore2() {
+		setScore(recomputeScore2());
+	}
+
+	public boolean isOriginal() {
+		return matchingTagEntry == null
+				|| matchingTagEntry.getOwner().getId() != getOwner().getId();
+	}
+
+	public static String normalize(String name) {
+		name = name.toLowerCase();
+
+		// Remove parenthesized parts
+		// E.g. Laren (Gelderland) -> Laren
+		name = name.replaceAll("\\([^\\)]*\\)", "");
+
+		// Remove diacritics.
+		name = Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll(
+				"[^a-z0-9]+", "");
+
+		return name;
+	}
+
+	public void setNormalizedTag() {
+		setNormalizedTag(TagEntry2.normalize(tag));
+	}
+
+	/*
+	 * Getters and setters
+	 */
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getTag() {
+		return tag;
+	}
+
+	public void setTag(String tag) {
+		this.tag = tag;
+	}
+
+	public String getNormalizedTag() {
+		return normalizedTag;
+	}
+
+	public void setNormalizedTag(String normalizedTag) {
+		this.normalizedTag = normalizedTag;
+	}
+
+	public int getGameTime() {
+		return gameTime;
+	}
+
+	public void setGameTime(int gameTime) {
+		this.gameTime = gameTime;
+	}
+
+	public int getTypingDuration() {
+		return typingDuration;
+	}
+
+	public void setTypingDuration(int typingDuration) {
+		this.typingDuration = typingDuration;
+	}
+
+	@JsonIgnore
+	public Game getGame() {
+		return game;
+	}
+
+	public void setGame(Game game) {
+		this.game = game;
+	}
+
+	@JsonIgnore
+	public User getOwner() {
+		return owner;
+	}
+
+	public void setOwner(User owner) {
+		this.owner = owner;
+	}
+
+	public Date getCreationDate() {
+		return creationDate;
+	}
+
+	public String getPrettyCreationDate() {
+		return DATE_FORMAT.format(creationDate);
+	}
+
+	public void setCreationDate(Date creationDate) {
+		this.creationDate = creationDate;
+	}
+
+	public String getDictionary() {
+		return dictionary;
+	}
+
+	public void setDictionary(String dictionary) {
+		this.dictionary = dictionary;
+	}
+
+	public int getScore() {
+		return score;
+	}
+
+	public void setScore(int score) {
+		this.score = score;
+	}
+
+	@JsonIgnore
+	public TagEntry2 getMatchingTagEntry() {
+		return matchingTagEntry;
+	}
+
+	public void setMatchingTagEntry(TagEntry2 matchingTagEntry) {
+		this.matchingTagEntry = matchingTagEntry;
+	}
+
+	public boolean isPioneer() {
+		return pioneer;
+	}
+
+	public void setPioneer(boolean pioneer) {
+		this.pioneer = pioneer;
+	}
+
+    public boolean isSpecialMatch() {
+        return isSpecialMatch;
+    }
+
+    public void setSpecialMatch(boolean specialMatch) {
+        isSpecialMatch = specialMatch;
+    }
+
+    public String toString() {
+		return String.format(
+				"#%d normalizedTag:%s user:%d video:%d game:%d time:%d",
+				getId(), getNormalizedTag(), getOwner().getId(), getGame()
+						.getVideo().getId(), getGame().getId(), getGameTime());
+	}
+
+}

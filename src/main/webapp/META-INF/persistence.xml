@@ -1,0 +1,18 @@
+<persistence>
+	<persistence-unit name="nl.waisda" transaction-type="JTA">
+	    <exclude-unlisted-classes>true</exclude-unlisted-classes><!-- FIXES Resource jndi://localhost not found WARNING -->
+	    <mapping-file>META-INF/orm.xml</mapping-file><!-- FIXES Resource jndi://localhost not found WARNING -->
+		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<class>nl.waisda.domain.User</class>
+		<class>nl.waisda.domain.Gender</class>
+		<class>nl.waisda.domain.Video</class>
+		<class>nl.waisda.domain.Game</class>
+		<class>nl.waisda.domain.TagEntry</class>
+		<class>nl.waisda.domain.ResetPassword</class>
+		<class>nl.waisda.domain.Participant</class>
+		<class>nl.waisda.domain.Rank</class>
+		<class>nl.waisda.domain.Badges</class>
+		<class>nl.waisda.domain.UserBadges</class>
+
+	</persistence-unit>
+</persistence>

@@ -1,0 +1,193 @@
+/*!
+ * Start Bootstrap - Simple Sidebar HTML Template (http://startbootstrap.com)
+ * Code licensed under the Apache License v2.0.
+ * For details, see http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+/* Toggle Styles */
+
+
+#wrapper {
+
+    padding-left: 0;
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+}
+
+#wrapper.toggled {
+    padding-left: 3000px;
+}
+
+#sidebar-wrapper {
+    top: 0px;
+    z-index: 1000;
+    position: fixed;
+    left: 300px;
+    width: 0;
+    height: 100%;
+    margin-left: -300px;
+    overflow-y: auto;
+    background: #272727;
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    width: 300px;
+}
+
+#page-content-wrapper {
+    width: 100%;
+    position: absolute;
+    padding: 0px;
+        background-color:#3e3e3e;
+}
+
+#wrapper.toggled #page-content-wrapper {
+    position: absolute;
+    margin-right: -300px;
+}
+
+/* Sidebar Styles */
+
+.sidebar-nav {
+    position: absolute;
+    top: 0;
+    width: 300px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sidebar-nav li {
+    text-indent: 20px;
+    line-height: 60px;
+    background: #999; /* for non-css3 browsers */
+
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#272727', endColorstr='#454545'); /* for IE */
+    background: -webkit-gradient(linear, left top, left bottom, from(#272727), to(#454545)); /* for webkit browsers */
+    background: -moz-linear-gradient(top,  #272727,  #454545); /* for firefox 3.6+ */
+}
+
+.sidebar-nav li a {
+    font-size: 1.3em;
+    display: block;
+    text-decoration: none;
+    color: #fff;
+
+}
+.sidebar-nav li a .tabspace {
+    margin-left:1em;
+}
+
+.sidebar-nav li a:hover {
+    text-decoration: none;
+    color: #999999;
+    background: rgba(255,255,255,0.2);
+}
+
+.sidebar-nav li a:active,
+.sidebar-nav li a:focus {
+    text-decoration: none;
+}
+
+.sidebar-nav > .sidebar-brand {
+}
+
+.sidebar-rank{
+    position: fixed;
+    top: 400px;
+    text-align: center;
+    width: 300px;
+}
+
+.socialmedia{
+    position: fixed;
+    bottom: 55px;
+}
+
+
+.statfont{
+    padding-top:10px;
+    text-align: center;
+    color: #fff;
+    font-size: 1em;
+    font-weight: 500;
+}
+
+.bignumber{
+    line-height:1em;
+    font-size: 16px;
+    position: relative;
+/*     font-size: 4em; */
+
+
+}
+
+.smallnumber {
+    font-size: 11px;
+    position: relative;
+
+}
+
+.sidebar-nav li.active a {
+    color: 000;
+    background:transparent -moz-linear-gradient(center top , #b6b6b6, #fff) repeat scroll 0% 0%;
+}
+
+@media(max-width:768){
+ #wrapper #sidebar-wrapper .sidebar-statistics {
+    display: none;
+
+    }   
+}
+
+@media(min-width:768px) {
+    #wrapper {
+        padding-left: 300px;
+    }
+
+    #wrapper.toggled {
+        padding-left: 0;
+    }
+
+    #sidebar-wrapper {
+        width: 300px;
+    }
+    .sidebar-statistics{
+        width: 300px;
+    } 
+
+    #wrapper.toggled #sidebar-wrapper {
+        width: 300;
+    }
+    .sidebar-statistics {
+        position:relative;
+        top: 400px;
+        width: 300px;
+    }
+    .sidebar-statistics p{
+        margin-left: 10px;
+        width:280px;
+        color: grey;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+    .sidebar-statistics table{
+        width: 300px;
+    }
+
+    #page-content-wrapper {
+        padding: 0px;
+        position: relative;
+    }
+
+    #wrapper.toggled #page-content-wrapper {
+        position: relative;
+        margin-right: 0;
+    }
+}

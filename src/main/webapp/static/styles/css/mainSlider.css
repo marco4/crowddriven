@@ -1,0 +1,536 @@
+
+/*===================*/
+/*=== Main Styles ===*/
+/*===================*/
+
+
+
+#dev7link {
+    position:absolute;
+    top:0;
+    left:50px;
+    width:60px;
+    height:67px;
+    border:0;
+    display:block;
+    text-indent:-9999px;
+}
+
+/* Bepaal grote van de slider*/
+.slider-wrapper { 
+	z-index: -1;
+	max-width: 100%;
+	width: 100%; 
+	margin:5px;
+}
+
+/*====================*/
+/*=== Other Styles ===*/
+/*====================*/
+.clear {
+	clear:both;
+}
+
+/* The Nivo Slider styles */
+.nivoSlider {
+	position:relative;
+	width:100%;
+	height:auto;
+	overflow: hidden;
+}
+.nivoSlider img {
+	position:absolute;
+	top:0px;
+	left:0px;
+	max-width: none;
+}
+.nivo-main-image {
+	display: block !important;
+	position: relative !important; 
+	width: 100% !important;
+}
+
+/* If an image is wrapped in a link */
+.nivoSlider a.nivo-imageLink {
+	position:absolute;
+	top:0px;
+	left:0px;
+	width:100%;
+	height:100%;
+	border:0;
+	padding:0;
+	margin:0;
+	z-index:6;
+	display:none;
+	background:white; 
+	filter:alpha(opacity=0); 
+	opacity:0;
+}
+/* The slices and boxes in the Slider */
+.nivo-slice {
+	display:block;
+	position:absolute;
+	z-index:5;
+	height:100%;
+	top:0;
+}
+.nivo-box {
+	display:block;
+	position:absolute;
+	z-index:5;
+	overflow:hidden;
+}
+.nivo-box img { display:block; }
+
+/* Caption styles */
+.nivo-caption {
+	position:absolute;
+	left:50px;
+	top:-40px;
+	color:#fff;
+	width:100%;
+	z-index:8;
+	padding: 150px 10px;
+	opacity: 1;
+	overflow: hidden;
+	display: none;
+
+}
+.nivo-caption p {
+	padding:5px;
+	margin:0;
+}
+.nivo-caption a {
+	display:inline !important;
+}
+.nivo-html-caption {
+    display:none;
+}
+/* Direction nav styles (e.g. Next & Prev) */
+.nivo-directionNav a {
+	position:absolute;
+	top:45%;
+	z-index:9;
+	cursor:pointer;
+}
+.nivo-prevNav {
+	left:0px;
+}
+.nivo-nextNav {
+	right:0px;
+}
+/* Control nav styles (e.g. 1,2,3...) */
+.nivo-controlNav {
+	text-align:center;
+	padding: 15px 0;
+}
+.nivo-controlNav a {
+	cursor:pointer;
+}
+.nivo-controlNav a.active {
+	font-weight:bold;
+}
+
+/*
+Skin Name: Nivo Slider Dark Theme
+Skin URI: http://nivo.dev7studios.com
+Description: A dark skin for the Nivo Slider.
+Version: 1.0
+Author: Gilbert Pellegrom
+Author URI: http://dev7studios.com
+Supports Thumbs: true
+*/
+
+.theme-dark.slider-wrapper {
+    background: #3c3c3c;
+    padding: 10px;
+}
+.theme-dark .nivoSlider {
+	position:relative;
+	background:#fff url(../../img/loading.gif) no-repeat 50% 50%;
+    margin-bottom:10px;
+    overflow: visible;
+}
+.theme-dark .nivoSlider img {
+	position:absolute;
+	top:0px;
+	left:0px;
+	display:none;
+}
+.theme-dark .nivoSlider a {
+	border:0;
+	display:block;
+}
+
+.theme-dark .nivo-controlNav {
+	text-align: left;
+	padding: 0;
+	position: relative;
+	z-index: 10;
+}
+.theme-dark .nivo-controlNav a {
+	display:inline-block;
+	width:10px;
+	height:10px;
+	background:url(../../img/bullets.png) no-repeat 0 2px;
+	text-indent:-9999px;
+	border:0;
+	margin: 0 2px;
+}
+.theme-dark .nivo-controlNav a.active {
+	background-position:0 100%;
+}
+
+.theme-dark .nivo-directionNav a {
+	display:block;
+	width:30px;
+	height:30px;
+	background: url(../../img/arrows.png) no-repeat;
+	text-indent:-9999px;
+	border:0;
+	top: auto;
+	bottom: -36px;
+	z-index: 11;
+}
+.theme-dark .nivo-directionNav a:hover {
+    background-color: #333;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+}
+.theme-dark a.nivo-nextNav {
+	background-position:-16px 50%;
+	right:0px;
+}
+.theme-dark a.nivo-prevNav {
+    background-position:11px 50%;
+    left: auto;
+	right: 35px;
+}
+
+.theme-dark .nivo-caption {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 150%;
+}
+.theme-dark .nivo-caption a {
+    color:#fff;
+    border-bottom:1px dotted #fff;
+}
+.theme-dark .nivo-caption a:hover {
+    color:#fff;
+}
+
+.theme-dark .nivo-controlNav.nivo-thumbs-enabled {
+	width: 80%;
+}
+.theme-dark .nivo-controlNav.nivo-thumbs-enabled a {
+	width: auto;
+	height: auto;
+	background: none;
+	margin-bottom: 5px;
+}
+.theme-dark .nivo-controlNav.nivo-thumbs-enabled img {
+	display: block;
+	width: 120px;
+	height: auto;
+}
+
+
+
+/* wrapper for component */
+.slider-wrapper{
+	top:25px;
+	width:100%;
+	left:0px;
+}
+
+.slider-wrapper .thumbContainer{
+	height:240px;
+	overflow:hidden;
+}
+
+.slider-wrapper .thumbContainer *:before,
+.slider-wrapper .thumbContainer *:after {
+  -webkit-box-sizing: content-box;
+     -moz-box-sizing: content-box;
+          box-sizing: content-box;
+}
+
+.slider-wrapper .thumbInnerContainer{
+	position:relative;
+	width:100%;
+	left:0px;
+	display:none;
+}
+
+.slider-wrapper .thumb_hidden{
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: alpha(opacity=0);
+  -moz-opacity: 0;
+  -khtml-opacity: 0;
+  opacity: 0;
+
+}
+
+.slider-wrapper .thumbHolder{
+	position:relative;
+	top:42px;
+	left:0px;
+	width:280px;
+	height:150px;
+	margin-left:8px;
+	float:left;
+	-webkit-transition: all 1s ease; /* Safari and Chrome */
+  	-moz-transition: all 1s ease; /* Firefox */
+  	-o-transition: all 1s ease; /* IE 9 */
+  	-ms-transition: all 1s ease; /* Opera */
+  	transition: all 1s ease;
+
+}
+
+.slider-wrapper .thumbHolder:hover{
+	background: rgba(0, 0, 0, 0.0);
+	padding-right: 70px;
+	padding-left: 70px;
+		 -webkit-transform:scale(1.5); /* Safari and Chrome */
+    -moz-transform:scale(1.5); /* Firefox */
+    -ms-transform:scale(1.5); /* IE 9 */
+    -o-transform:scale(1.5); /* Opera */
+     transform:scale(1.5);
+
+}
+
+.slider-wrapper .thumbHolder:hover .highscore {
+	background: rgba(0, 0, 0, 0.0);
+	padding-right: 70px;
+	right:3px;
+	-webkit-transform:scale(0.75); /* Safari and Chrome */
+    -moz-transform:scale(0.75); /* Firefox */
+    -ms-transform:scale(0.75); /* IE 9 */
+    -o-transform:scale(0.75); /* Opera */
+     transform:scale(0.75);
+
+}
+.slider-wrapper .thumbHolder:hover .totalMatches {
+	background: rgba(0, 0, 0, 0.0);
+	padding-right: 70px;
+	right:2px;
+	-webkit-transform:scale(0.75); /* Safari and Chrome */
+    -moz-transform:scale(0.75); /* Firefox */
+    -ms-transform:scale(0.75); /* IE 9 */
+    -o-transform:scale(0.75); /* Opera */
+     transform:scale(0.75);
+}
+.slider-wrapper .thumbHolder:hover .diveStats {
+	background: rgba(0, 0, 0, 0.0);
+	padding-right: 70px;
+	right:5px;
+	-webkit-transform:scale(0.75); /* Safari and Chrome */
+    -moz-transform:scale(0.75); /* Firefox */
+    -ms-transform:scale(0.75); /* IE 9 */
+    -o-transform:scale(0.75); /* Opera */
+     transform:scale(0.75);
+}
+.slider-wrapper .thumbHolder a img{
+	position:absolute;
+	display:block;
+	width:280px;
+	height:150px;
+
+
+}
+
+
+
+.thumbHolder p{
+	position: absolute;
+	z-index: 50;
+	font-size:70px;
+	color:white;
+	display:block;
+	visibility: hidden;
+    opacity: 0;
+
+
+
+}
+
+.slider-wrapper .thumbHolder:hover p{
+    visibility: visible;
+  	opacity: 1;
+  	display:block;
+}
+
+
+/* title */
+.slider-wrapper .title{
+	width: 420px;
+	left: 0px;
+	background-color: rgba(0, 0, 0, 0.6);
+	text-align: center;
+	display:block;
+	top:0px;
+	font-family: Arial,Helvetica Neue,Helvetica; 
+	font-size: 12px;
+	color:#fff;
+	-webkit-transition: all 1s ease; /* Safari and Chrome */
+  	-moz-transition: all 1s ease; /* Firefox */
+  	-o-transition: all 1s ease; /* IE 9 */
+  	-ms-transition: all 1s ease; /* Opera */
+  	transition: all 1s ease;
+}
+
+.img {
+  min-height: 78px;
+  padding: 0;
+  margin-bottom: 4px;
+  position: relative;
+  box-sizing: none;
+}
+
+.img img {
+  width: 100%;
+}
+.img .overlay {
+  position: absolute;
+}
+.img .overlay.trigger {
+  color: #fff;
+  left: 50%;
+  top: 100%;
+  margin: -25px 0 0 -25px;
+}
+
+p.overlay.trigger2 {
+	z-index: 5200;	
+  width: 150px;
+  height: 100px;
+  left: 40%;
+  top: 150%;
+  margin: -25px 0 0 -25px;
+  background: transparent url(../../img/play-button-overlay2.png) 0 0 no-repeat;
+}
+
+
+.slider-wrapper .info{
+	position:absolute;
+	left:75px;
+	top: 135px;
+	font-family: Arial,Helvetica Neue,Helvetica; 
+	font-size: 12px;
+	color:#fff;
+	font-style: italic;
+
+}	
+
+.slider-wrapper .highscore{
+	position:absolute;
+	right:5px;
+	top:105px;
+	font-family: Arial,Helvetica Neue,Helvetica; 
+	font-size: 12px;
+	color:#fff;
+	line-height:20px;
+	z-index:5000;
+}
+.slider-wrapper .totalMatches{
+	position:absolute;
+	right:5px;
+	top:120px;
+	font-family: Arial,Helvetica Neue,Helvetica; 
+	font-size: 12px;
+	color:#fff;
+	line-height:20px;
+	z-index:5000;
+}
+.slider-wrapper .diveStats{
+	position:absolute;
+	right:5px;
+	top:135px;
+	font-family: Arial,Helvetica Neue,Helvetica; 
+	font-size: 12px;
+	color:#fff;
+	line-height:20px;
+	z-index:5000;
+}
+
+
+/* Thumb back and forward*/
+.slider-wrapper .thumbBackward{
+	top:47px;
+	position:absolute;
+	width:60px;
+	height:150px;
+	z-index: 1000;
+	left:0px;
+	background-color: rgba(0, 0, 0, 0.6);
+	display:none;
+}
+
+.slider-wrapper .thumbBackward *:before,
+.slider-wrapper .thumbBackward *:after {
+  -webkit-box-sizing: content-box;
+     -moz-box-sizing: content-box;
+          box-sizing: content-box;
+}
+
+
+.slider-wrapper .thumbBackward img{
+	position:absolute;
+	display:block;
+	width:21px;
+	height:31px;
+	top:50%;
+	left:50%;
+	margin-left:-12px;
+	margin-top:-15px;
+}
+
+.slider-wrapper .thumbForward{
+	position:absolute;
+	width:60px;
+	height:150px;
+	top:47px;
+	right:0px;
+	background-color: rgba(0, 0, 0, 0.6);
+	display:none;
+}
+
+
+.slider-wrapper .thumbForward img{
+	position:absolute;
+	display:block;
+	width:21px;
+	height:31px;
+	top:50%;
+	left:50%;
+	margin-left:-8px;
+	margin-top:-15px;
+}
+
+/* TAG page */
+.img .overlay.triggertag {
+  color: #fff;
+  width: 100%;
+  left: 0px;
+  top: 0px;
+
+	background-color: rgba(0, 0, 0, 0.6);
+	text-align: center;
+	display:block;
+	top:0px;
+	font-family: Arial,Helvetica Neue,Helvetica; 
+	font-size: 18px;
+	color:#fff;
+}
+
+.img .overlay.triggersocialdata {
+  color: #fff;
+  width: 100%;
+  bottom: 0px;
+  text-align: right;
+  display:block;
+  font-family: Arial,Helvetica Neue,Helvetica; 
+  font-size: 12px;
+  color:#fff;
+}

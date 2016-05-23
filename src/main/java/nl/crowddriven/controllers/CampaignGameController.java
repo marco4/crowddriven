@@ -1,0 +1,267 @@
+/*  This file is part of Waisda 
+
+    Copyright (c) 2012 Netherlands Institute for Sound and Vision
+    https://github.com/beeldengeluid/waisda
+	
+    Waisda is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Waisda is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Waisda.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+package nl.waisda.controllers;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.*;
+
+import nl.waisda.domain.*;
+import nl.waisda.exceptions.Forbidden;
+import nl.waisda.exceptions.NotFoundException;
+import nl.waisda.forms.LoginForm;
+import nl.waisda.forms.RegisterForm;
+import nl.waisda.forms.RequestResetForm;
+import nl.waisda.model.CurrentGames;
+import nl.waisda.model.GameUpdate;
+import nl.waisda.model.Recap;
+import nl.waisda.model.ShallowTagEntry;
+
+import nl.waisda.repositories.ParticipantRepository;
+import nl.waisda.repositories.TagEntryRepository;
+import nl.waisda.repositories.UserRepository;
+import nl.waisda.repositories.VideoRepository;
+import nl.waisda.services.GameService;
+import nl.waisda.services.ScoringServiceIF;
+import nl.waisda.services.UserSessionService;
+import nl.waisda.validators.RegisterValidator;
+
+
+@Controller
+@SessionAttributes("userSession")
+public class CampaignGameController {
+	
+	private Logger log = Logger.getLogger(GameController.class);
+
+	@Autowired
+	private UserSessionService userSessionService;
+
+	@Autowired
+	private VideoRepository videoRepo;
+	
+	@Autowired
+	private UserRepository userRepo;
+	
+	@Autowired
+	private GameService gameService;
+	
+	@Autowired
+	private TagEntryRepository tagEntryRepo;
+	
+	@Autowired
+	private ParticipantRepository participantRepo;
+
+	@Autowired
+	private ScoringServiceIF scoringService;
+
+	
+	
+	@RequestMapping("/start-game2/{videoId}/{gameType}")
+	public String startGame(@PathVariable int videoId, @PathVariable String gameType, 
+			ModelMap model, HttpSession session) throws NotFoundException {
+		User user = userSessionService.requireCurrentUserOrCreateAnonymous(session);
+		Video video = videoRepo.getById(videoId);
+
+		Game game = gameService.createGame(user, video);
+
+		return "redirect:/game2/" + game.getId() + "/" + gameType;
+	}
+
+	
+	@RequestMapping("/game2/{gameId}/{gameType}")
+	public String game(@PathVariable int gameId, @PathVariable String gameType, 
+			ModelMap model, HttpSession session) throws NotFoundException {
+		Game game = gameService.getGameById(gameId);
+		
+		if (game == null) {
+			throw new NotFoundException("Unknown game " + gameId);
+		} else if (game.hasEnded()) {
+			log.info(String.format("Redirecting request for old game %d to /", gameId));
+			return "redirect:/";
+		}
+		
+		User user = userSessionService.requireCurrentUserOrCreateAnonymous(session);
+
+		if (participantRepo.get(user.getId(), game.getId()) == null) {
+			participantRepo.store(new Participant(user, game));
+			log.info(String.format("%s joins game %d", user.getShortDescription(), gameId));
+		}
+
+		model.addAttribute("game", game);
+		model.addAttribute("gameType", gameType);
+		
+		if (user == null || user.isAnonymous()) {
+			model.addAttribute("loginForm", new LoginForm());
+			model.addAttribute("form", new RegisterForm());
+			model.addAttribute("forgotPasswordForm", new RequestResetForm());
+		}
+		
+		return "z_game-rampage";
+	}
+	
+	@RequestMapping("/game2/{gameId}/update/{time}")
+	@ResponseBody
+	public GameUpdate update(@PathVariable int gameId, @PathVariable int time,
+			ModelMap model, HttpSession session) throws NotFoundException {
+		// Fetch data
+		User user = userSessionService.requireCurrentUser(session);
+		Game game = gameService.getGameById(gameId);
+
+		if (game == null) {
+			throw new NotFoundException("Unknown game " + gameId);
+		}
+
+		List<UserScore> participants = tagEntryRepo.getParticipants(game
+				.getId());
+		List<TagEntry> myEntries = tagEntryRepo.getEntries(
+				game.getId(), user.getId());
+		
+		GameUpdate update = new GameUpdate();
+		update.setOwnId(user.getId());
+
+		int gameScore = 0;
+		for (TagEntry te : myEntries) {
+			gameScore += te.getScore();
+		}
+		update.setGameScore(gameScore);
+
+		for (TagEntry tag : myEntries) {
+			update.getTagEntries().add(ShallowTagEntry.fromTagEntry(tag));
+		}
+
+		List<UserSummary> summaries = new ArrayList<UserSummary>();
+		for (UserScore sgs : participants) {
+			User s = sgs.getUser();
+			summaries.add(new UserSummary(s.getId(), s.getName(), sgs.getScore(), s.getSmallAvatarUrl()));
+		}
+		Collections.sort(summaries, UserSummary.COMPARE_BY_GAME_SCORE);
+
+		if (game.getCountExistingVideoTags() > 0) {
+			summaries.add(UserSummary.GHOST);
+		}
+
+		update.setStudents(summaries);
+
+		return update;
+	}
+	
+
+		@RequestMapping("/current-queues2")
+	@ResponseBody
+	public CurrentGames currentQueues(ModelMap model) {
+		return new CurrentGames(new Date().getTime(), gameService.getCurrentQueues());
+	}
+
+	@RequestMapping("/tag-entry2")
+	@ResponseBody
+	@Transactional
+	public ShallowTagEntry enterTag(@ModelAttribute TagEntry tagEntry,
+			HttpSession session) {
+		User user = userSessionService.getCurrentUser(session);
+
+		if (user == null) {
+			return null;
+		}
+
+		tagEntry.setTag(RegisterValidator.normalizeWhitespace(tagEntry.getTag()));
+		tagEntry.setOwner(user);
+		tagEntry.setNormalizedTag();
+
+		if (tagEntry.getNormalizedTag().length() == 0) {
+			return null;
+		}
+
+		Game game = gameService.getGameById(tagEntry.getGame().getId());
+		tagEntry.setGame(game);
+
+		if (game.acceptsNewTagEntryAt(tagEntry.getGameTime()) && tagEntry.getNormalizedTag().length() < 40) {
+			if (tagEntryRepo.alreadyEntered(tagEntry.getGame().getId(),
+					tagEntry.getNormalizedTag(), tagEntry.getGameTime(),
+					user.getId())) {
+				log.info(String
+						.format("Ignoring duplicate entry %s for game %d, user %d, time %d",
+								tagEntry.getNormalizedTag(), tagEntry.getGame()
+										.getId(), user.getId(), tagEntry
+										.getGameTime()));
+				return null;
+			}
+		} else {
+			log.info(String
+					.format("Ignoring tag %s for game %d, user %d, time %d (actual game time %d, delay %d)",
+							tagEntry.getTag(), tagEntry.getGame().getId(),
+							user.getId(), tagEntry.getGameTime(),
+							game.getElapsed(),
+							game.getElapsed() - tagEntry.getGameTime()));
+			return null;
+		}
+
+		scoringService.updateDictionary(tagEntry);
+		scoringService.updateMatchAndStore(tagEntry, true);
+
+		log.info(String
+				.format("Registering tag %s #%d with score %d for game %d, user %d, time %d (actual game time %d, delay %d)",
+						tagEntry.getTag(), tagEntry.getId(), tagEntry.getScore(), tagEntry.getGame()
+								.getId(), user.getId(), tagEntry.getGameTime(),
+						game.getElapsed(),
+						game.getElapsed() - tagEntry.getGameTime()));
+
+		return ShallowTagEntry.fromTagEntry(tagEntry);
+	}
+
+	@RequestMapping("/game2/{gameId}/recap/{ownerId}")
+	public String recap(@PathVariable int gameId, @PathVariable int ownerId,
+			ModelMap model, HttpSession session, HttpServletRequest request) throws NotFoundException,
+			Forbidden {
+		
+		User user = userSessionService.getCurrentUser(session);
+
+		if (user == null) {
+			return "redirect:/inloggen";
+		} else if (user.getId() != ownerId) {
+			throw new Forbidden();
+		}
+		
+		User owner = userRepo.getById(ownerId);
+		Game game = gameService.getGameById(gameId);
+		Recap recap = gameService.getRecap(game, owner);
+		if (recap.isEmpty()) {
+			log.info(String.format("Redirecting request for empty recap "
+					+ "for game %d, user %d to / (referrer: %s)", gameId,
+					ownerId, request.getHeader("Referer")));
+			return "redirect:/";
+		} else {
+			model.put("recap", recap);
+			return "recap";
+		}
+	}
+
+
+}
