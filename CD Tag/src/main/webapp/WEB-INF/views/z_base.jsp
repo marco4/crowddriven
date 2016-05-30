@@ -43,7 +43,7 @@
 <script src="/currentUser.js?dummy=<%= new java.util.Date().getTime() %>"></script>
 <script src="${appBaseUrl}/static/script/global.js"></script>
 <script src="${appBaseUrl}/static/script/games-queue.js"></script>
-<script src="https://base2.googlecode.com/svn/version/1.0.2/src/base2.js"></script>
+<script src="${appBaseUrl}/static/script/base2.js"></script>
 <script src="${appBaseUrl}/static/mediaplayer-5.9/jwplayer.js"></script>
 <script src="${appBaseUrl}/static/script/velocity.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" />
